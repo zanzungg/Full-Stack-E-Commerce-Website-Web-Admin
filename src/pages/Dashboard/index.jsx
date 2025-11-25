@@ -52,7 +52,7 @@ const DashboardPage = () => {
             <img src="./welcome.png" alt="Welcome" className="h-12 w-12 min-w-12 animate-bounce" />
             <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
               Good Morning,<br />
-              <span className="linear-text">Cameron</span>
+              <span className="linear-text">Admin</span>
             </h1>
           </div>
           
@@ -61,7 +61,7 @@ const DashboardPage = () => {
           </p>
           
           <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-            <Link to="/products/upload">
+            <Link to="/product/upload">
               <Button 
                 variant="contained" 
                 className="bg-blue-600! text-white! hover:bg-blue-700! shadow-lg! rounded-xl! px-6! py-3! font-semibold! capitalize! transition-all! duration-300!"

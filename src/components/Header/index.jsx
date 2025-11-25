@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { RiMenu2Line } from "react-icons/ri"
+import { RiMenuUnfold4Fill } from "react-icons/ri"
+import { RiMenuFold4Fill } from "react-icons/ri"
 import { FaRegBell } from "react-icons/fa"
 import { IoLogOutOutline, IoSettingsOutline, IoPersonOutline } from "react-icons/io5"
 import { HiChevronDown } from "react-icons/hi"
@@ -47,9 +48,13 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
             <button 
               onClick={toggleSidebar}
               className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200"
-              aria-label="Toggle sidebar"
+              aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
             >
-              <RiMenu2Line className="w-6 h-6" />
+              {sidebarOpen ? (
+                <RiMenuUnfold4Fill className="w-6 h-6" />
+              ) : (
+                <RiMenuFold4Fill className="w-6 h-6" />
+              )}
             </button>
 
             {/* Logo when sidebar closed */}
