@@ -3,10 +3,10 @@ import { Link, useLocation } from 'react-router-dom'
 import { RxDashboard } from "react-icons/rx"
 import { MdOutlineInventory2, MdOutlineShoppingCart, MdOutlinePeopleAlt, MdOutlineCategory } from 'react-icons/md'
 import { FaRegImages } from "react-icons/fa"
-import { IoLogOutOutline } from "react-icons/io5"
+import { IoLogOutOutline, IoClose } from "react-icons/io5"
 import { FaAngleDown, FaAngleUp } from "react-icons/fa6"
 
-const Sidebar = ({ isOpen }) => {
+const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation()
   const [homeSlidesOpen, setHomeSlidesOpen] = useState(false)
   const [productsOpen, setProductsOpen] = useState(false)
@@ -26,13 +26,13 @@ const Sidebar = ({ isOpen }) => {
       isOpen: homeSlidesOpen,
       setIsOpen: setHomeSlidesOpen,
       subItems: [
-        { path: '/home-slides/list', label: 'Home Banners Slides List' },
-        { path: '/home-slides/add', label: 'Add Home Banner Slide' }
+        { path: '/home-slides', label: 'Home Banners Slides List' },
+        { path: '/home-slide/add', label: 'Add Home Banner Slide' }
       ]
     },
     { 
       path: '/customers', 
-      label: 'Users', 
+      label: 'Customers', 
       icon: <MdOutlinePeopleAlt className="w-5 h-5" /> 
     },
     { 
@@ -43,8 +43,8 @@ const Sidebar = ({ isOpen }) => {
       isOpen: productsOpen,
       setIsOpen: setProductsOpen,
       subItems: [
-        { path: '/products/list', label: 'Product List' },
-        { path: '/products/upload', label: 'Product Upload' }
+        { path: '/products', label: 'Product List' },
+        { path: '/product/upload', label: 'Product Upload' }
       ]
     },
     { 
@@ -55,10 +55,10 @@ const Sidebar = ({ isOpen }) => {
       isOpen: categoriesOpen,
       setIsOpen: setCategoriesOpen,
       subItems: [
-        { path: '/categories/list', label: 'Category List' },
-        { path: '/categories/add', label: 'Add a Category' },
-        { path: '/categories/sub-list', label: 'Sub Category List' },
-        { path: '/categories/sub-add', label: 'Add a Sub Category' }
+        { path: '/categories', label: 'Category List' },
+        { path: '/category/add', label: 'Add a Category' },
+        { path: '/category/sub-cat', label: 'Sub Category List' },
+        { path: '/category/sub-cat/add', label: 'Add a Sub Category' }
       ]
     },
     { 
@@ -84,97 +84,96 @@ const Sidebar = ({ isOpen }) => {
     return false
   }
 
+  const handleLinkClick = () => {
+    // Close sidebar on mobile when link is clicked
+    if (window.innerWidth < 1024) {
+      onClose?.()
+    }
+  }
+
   return (
     <aside
-      className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 shadow-lg z-50 transition-all duration-300 overflow-hidden ${
-        isOpen ? 'w-64' : 'w-20'
-      }`}
+      className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 shadow-xl z-50 transition-transform duration-300 ease-in-out ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      } w-64`}
     >
       {/* Header */}
-      <div className={`flex items-center h-16 px-4 border-b border-gray-200 ${
-        isOpen ? 'justify-between' : 'justify-center'
-      }`}>
+      <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 bg-linear-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-md">
             <span className="text-white font-bold text-xl">D</span>
           </div>
-          {isOpen && (
-            <span className="text-lg font-semibold text-gray-900 truncate">Admin</span>
-          )}
+          <div className="flex flex-col">
+            <span className="text-base font-bold text-gray-900 leading-tight">Dashboard</span>
+            <span className="text-xs text-gray-500">Admin Panel</span>
+          </div>
         </div>
+
+        {/* Close button - Mobile only */}
+        <button
+          onClick={onClose}
+          className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          aria-label="Close sidebar"
+        >
+          <IoClose className="w-5 h-5 text-gray-600" />
+        </button>
       </div>
 
       {/* Navigation Menu */}
-      <nav className="p-4 space-y-1 overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100% - 144px)' }}>
+      <nav className="p-4 space-y-1 overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 64px)' }}>
         {menuItems.map((item) => (
           <div key={item.path}>
             {/* Main Menu Item */}
             {item.hasDropdown ? (
               <button
-                onClick={() => isOpen && item.setIsOpen(!item.isOpen)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors group relative ${
+                onClick={() => item.setIsOpen(!item.isOpen)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                   isActive(item.path) || isParentActive(item)
-                    ? 'bg-blue-50 text-blue-600'
+                    ? 'bg-linear-to-r from-blue-50 to-blue-100 text-blue-700 shadow-sm'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
-                } ${!isOpen && 'justify-center'}`}
-                title={!isOpen ? item.label : ''}
+                }`}
               >
                 <span className="shrink-0">{item.icon}</span>
-                {isOpen && (
-                  <>
-                    <span className="flex-1 text-left truncate">{item.label}</span>
-                    {item.isOpen ? (
-                      <FaAngleUp className="w-4 h-4 shrink-0" />
-                    ) : (
-                      <FaAngleDown className="w-4 h-4 shrink-0" />
-                    )}
-                  </>
-                )}
-                
-                {/* Tooltip khi thu nhỏ */}
-                {!isOpen && (
-                  <span className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                    {item.label}
-                  </span>
+                <span className="flex-1 text-left text-sm truncate">
+                  {item.label}
+                </span>
+                {item.isOpen ? (
+                  <FaAngleUp className="w-4 h-4 shrink-0" />
+                ) : (
+                  <FaAngleDown className="w-4 h-4 shrink-0" />
                 )}
               </button>
             ) : (
               <Link
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors group relative ${
+                onClick={handleLinkClick}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                   isActive(item.path)
-                    ? 'bg-blue-50 text-blue-600'
+                    ? 'bg-linear-to-r from-blue-50 to-blue-100 text-blue-700 shadow-sm'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
-                } ${!isOpen && 'justify-center'}`}
-                title={!isOpen ? item.label : ''}
+                }`}
               >
                 <span className="shrink-0">{item.icon}</span>
-                {isOpen && <span className="truncate">{item.label}</span>}
-                
-                {/* Tooltip khi thu nhỏ */}
-                {!isOpen && (
-                  <span className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                    {item.label}
-                  </span>
-                )}
+                <span className="text-sm truncate">{item.label}</span>
               </Link>
             )}
 
             {/* Dropdown SubMenu */}
-            {item.hasDropdown && isOpen && item.isOpen && (
-              <div className="mt-1 ml-4 space-y-1">
+            {item.hasDropdown && item.isOpen && (
+              <div className="mt-1 ml-4 space-y-1 animate-slideDown">
                 {item.subItems.map((subItem) => (
                   <Link
                     key={subItem.path}
                     to={subItem.path}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    onClick={handleLinkClick}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                       isActive(subItem.path)
-                        ? 'bg-blue-50 text-blue-600'
+                        ? 'bg-blue-50 text-blue-700'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600'
                     }`}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
-                    <span className="truncate">{subItem.label}</span>
+                    <span className="truncate text-xs">{subItem.label}</span>
                   </Link>
                 ))}
               </div>
@@ -182,16 +181,6 @@ const Sidebar = ({ isOpen }) => {
           </div>
         ))}
       </nav>
-
-      {/* Footer */}
-      {isOpen && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <p className="text-sm font-medium text-blue-900">Need Help?</p>
-            <p className="text-xs text-blue-700 mt-1">Contact support team</p>
-          </div>
-        </div>
-      )}
     </aside>
   )
 }
