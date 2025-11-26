@@ -24,6 +24,9 @@ import CustomersPage from './pages/Customers'
 import OrdersPage from './pages/Orders'
 import Signin from './pages/Signin'
 import Signup from './pages/Signup'
+import ForgotPassword from './pages/ForgotPassword'
+import VerifyEmail from './pages/VerifyEmail'
+import ResetPassword from './pages/ResetPassword'
 
 function App() {
   const router = createBrowserRouter([
@@ -34,6 +37,22 @@ function App() {
     {
       path: "/sign-up",
       element: <Signup />
+    },
+    {
+      path: "/logout",
+      element: <Signin />
+    },
+    {
+      path: "/forgot-password",
+      element: <ForgotPassword />
+    },
+    {
+      path: "/verify-email",
+      element: <VerifyEmail />
+    },
+    {
+      path: "/reset-password",
+      element: <ResetPassword />
     },
     {
       path: "/",
