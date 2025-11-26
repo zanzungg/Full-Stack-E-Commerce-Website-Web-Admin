@@ -1,9 +1,17 @@
 import React, { useState } from 'react'
 import { Button } from '@mui/material'
-import { IoSearchOutline, IoFilterOutline, IoDownloadOutline } from "react-icons/io5"
-import { FaEye, FaEdit, FaTrash } from "react-icons/fa"
+import { IoDownloadOutline } from "react-icons/io5"
 import { HiOutlineShoppingBag } from "react-icons/hi2"
-import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md"
+
+// Import Reusable Components
+import SearchBar from '../../components/SearchBar'
+import FilterDropdown from '../../components/FilterDropdown'
+import StatsCard from '../../components/StatsCard'
+import StatusBadge from '../../components/StatusBadge'
+import ActionButtons from '../../components/ActionButtons'
+import Pagination from '../../components/Pagination'
+import PageHeader from '../../components/PageHeader'
+import EmptyState from '../../components/EmptyState'
 
 const OrdersPage = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -168,18 +176,6 @@ const OrdersPage = () => {
     { value: 'Cancelled', label: 'Cancelled' },
   ]
 
-  // Get status badge color
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Delivered': return 'bg-green-100 text-green-800'
-      case 'Processing': return 'bg-blue-100 text-blue-800'
-      case 'Shipped': return 'bg-purple-100 text-purple-800'
-      case 'Pending': return 'bg-yellow-100 text-yellow-800'
-      case 'Cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
   // Filter orders
   const filteredOrders = ordersData.filter(order => {
     const matchesSearch = 
@@ -205,27 +201,22 @@ const OrdersPage = () => {
   }
 
   // Calculate stats
-  const stats = {
-    total: ordersData.length,
-    pending: ordersData.filter(o => o.status === 'Pending').length,
-    processing: ordersData.filter(o => o.status === 'Processing').length,
-    delivered: ordersData.filter(o => o.status === 'Delivered').length,
-    cancelled: ordersData.filter(o => o.status === 'Cancelled').length,
-  }
+  const stats = [
+    { label: 'Total Orders', value: ordersData.length, icon: '📦', color: 'bg-blue-100 text-blue-800' },
+    { label: 'Pending', value: ordersData.filter(o => o.status === 'Pending').length, icon: '⏳', color: 'bg-yellow-100 text-yellow-800' },
+    { label: 'Processing', value: ordersData.filter(o => o.status === 'Processing').length, icon: '⚙️', color: 'bg-blue-100 text-blue-800' },
+    { label: 'Delivered', value: ordersData.filter(o => o.status === 'Delivered').length, icon: '✅', color: 'bg-green-100 text-green-800' },
+    { label: 'Cancelled', value: ordersData.filter(o => o.status === 'Cancelled').length, icon: '❌', color: 'bg-red-100 text-red-800' },
+  ]
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <HiOutlineShoppingBag className="w-8 h-8 text-blue-600" />
-            Orders Management
-          </h1>
-          <p className="text-gray-600 mt-2">Manage and track all customer orders</p>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
+      <PageHeader
+        icon={HiOutlineShoppingBag}
+        title="Orders Management"
+        subtitle="Manage and track all customer orders"
+        actions={
           <Button
             variant="outlined"
             className="border-blue-600! text-blue-600! hover:bg-blue-50! rounded-xl! px-5! py-2.5! font-semibold! capitalize!"
@@ -233,65 +224,36 @@ const OrdersPage = () => {
           >
             Export
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {[
-          { label: 'Total Orders', value: stats.total, color: 'bg-blue-100 text-blue-800', icon: '📦' },
-          { label: 'Pending', value: stats.pending, color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
-          { label: 'Processing', value: stats.processing, color: 'bg-blue-100 text-blue-800', icon: '⚙️' },
-          { label: 'Delivered', value: stats.delivered, color: 'bg-green-100 text-green-800', icon: '✅' },
-          { label: 'Cancelled', value: stats.cancelled, color: 'bg-red-100 text-red-800', icon: '❌' },
-        ].map((stat, index) => (
-          <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 font-medium mb-1">{stat.label}</p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-              </div>
-              <div className="text-3xl">{stat.icon}</div>
-            </div>
-          </div>
+        {stats.map((stat, index) => (
+          <StatsCard
+            key={index}
+            label={stat.label}
+            value={stat.value}
+            icon={stat.icon}
+            color={stat.color}
+          />
         ))}
       </div>
 
       {/* Filters & Search */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <IoSearchOutline className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by Order ID, Payment ID, Name, Phone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            />
-          </div>
-
-          {/* Status Filter */}
-          <div className="relative min-w-[200px]">
-            <IoFilterOutline className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full pl-12 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white cursor-pointer"
-            >
-              {statusOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
+          <SearchBar
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by Order ID, Payment ID, Name, Phone..."
+          />
+          
+          <FilterDropdown
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            options={statusOptions}
+          />
         </div>
       </div>
 
@@ -354,45 +316,28 @@ const OrdersPage = () => {
                       <span className="font-bold text-gray-900">{order.totalAmount}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-3 py-1.5 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
+                      <StatusBadge status={order.status} type="order" />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-gray-600">{order.date}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="View Details"
-                        >
-                          <FaEye className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Edit Order"
-                        >
-                          <FaEdit className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete Order"
-                        >
-                          <FaTrash className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <ActionButtons
+                        onView={() => console.log('View', order.orderId)}
+                        onEdit={() => console.log('Edit', order.orderId)}
+                        onDelete={() => console.log('Delete', order.orderId)}
+                      />
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="11" className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="text-6xl">📦</div>
-                      <p className="text-lg font-semibold text-gray-900">No orders found</p>
-                      <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
-                    </div>
+                  <td colSpan="11">
+                    <EmptyState
+                      icon="📦"
+                      title="No orders found"
+                      subtitle="Try adjusting your search or filters"
+                    />
                   </td>
                 </tr>
               )}
@@ -402,47 +347,15 @@ const OrdersPage = () => {
 
         {/* Pagination */}
         {filteredOrders.length > itemsPerPage && (
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p className="text-sm text-gray-600">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length} orders
-              </p>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <MdKeyboardArrowLeft className="w-5 h-5" />
-                </button>
-
-                <div className="flex gap-1">
-                  {[...Array(totalPages)].map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handlePageChange(index + 1)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        currentPage === index + 1
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <MdKeyboardArrowRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            totalItems={filteredOrders.length}
+            itemName="orders"
+          />
         )}
       </div>
     </div>

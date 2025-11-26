@@ -65,7 +65,7 @@ const Signin = () => {
     setTimeout(() => {
       setLoading(false)
       // Navigate to dashboard
-      navigate('/dashboard')
+      navigate('/')
     }, 1500)
   }
 

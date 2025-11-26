@@ -36,7 +36,7 @@ function App() {
       element: <Signup />
     },
     {
-      path: "/dashboard",
+      path: "/",
       element: <Layout />,
       children: [
         // Dashboard
