@@ -22,11 +22,21 @@ import AddSubCategoryPage from './pages/Categories/SubAdd'
 // Other Pages
 import CustomersPage from './pages/Customers'
 import OrdersPage from './pages/Orders'
+import Signin from './pages/Signin'
+import Signup from './pages/Signup'
 
 function App() {
   const router = createBrowserRouter([
     {
-      path: "/",
+      path: "/sign-in",
+      element: <Signin />
+    },
+    {
+      path: "/sign-up",
+      element: <Signup />
+    },
+    {
+      path: "/dashboard",
       element: <Layout />,
       children: [
         // Dashboard
