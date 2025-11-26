@@ -19,15 +19,15 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: <RxDashboard className="w-5 h-5" /> 
     },
     { 
-      path: '/home-slides', 
-      label: 'Home Slides', 
+      path: '/home-banner-slides', 
+      label: 'Home Banner Slides', 
       icon: <FaRegImages className="w-5 h-5" />,
       hasDropdown: true,
       isOpen: homeSlidesOpen,
       setIsOpen: setHomeSlidesOpen,
       subItems: [
-        { path: '/home-slides', label: 'Home Banners Slides List' },
-        { path: '/home-slide/add', label: 'Add Home Banner Slide' }
+        { path: '/home-banner-slides', label: 'Home Banner Slides List' },
+        { path: '/home-banner-slide/add', label: 'Add Home Banner Slide' }
       ]
     },
     { 

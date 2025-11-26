@@ -109,7 +109,7 @@ const DashboardPage = () => {
           </p>
           
           <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-            <Link to="/products/upload">
+            <Link to="/product/upload">
               <Button 
                 variant="contained" 
                 className="bg-blue-600! text-white! hover:bg-blue-700! shadow-lg! rounded-xl! px-6! py-3! font-semibold! capitalize! transition-all! duration-300!"
@@ -297,7 +297,7 @@ const DashboardPage = () => {
               <p className="text-sm text-gray-500 mt-1">Best selling items</p>
             </div>
             <Link 
-              to="/products/list"
+              to="/products"
               className="text-sm text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors flex items-center gap-1"
             >
               View All

@@ -6,8 +6,8 @@ import Layout from './layout'
 import DashboardPage from './pages/Dashboard'
 
 // Home Slides Pages
-import HomeSlidesListPage from './pages/HomeSlides/List'
-import AddHomeBannerSlidePage from './pages/HomeSlides/Add'
+import HomeSliderBanners from './pages/HomeSlidesBanners/List'
+import AddHomeBannerSlidePage from './pages/HomeSlidesBanners/Add'
 
 // Products Pages
 import ProductListPage from './pages/Products/List'
@@ -45,13 +45,13 @@ function App() {
           element: <DashboardPage />
         },
         
-        // Home Slides Routes
+        // Home Slider Routes
         {
-          path: "home-slides",
-          element: <HomeSlidesListPage />
+          path: "home-banner-slides",
+          element: <HomeSliderBanners />
         },
         {
-          path: "home-slide/add",
+          path: "home-banner-slide/add",
           element: <AddHomeBannerSlidePage />
         },
         

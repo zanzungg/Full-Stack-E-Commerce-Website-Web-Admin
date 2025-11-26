@@ -423,7 +423,7 @@ const ProductUploadPage = () => {
                 fullWidth
                 onClick={() => navigate('/products')}
                 disabled={loading}
-                className="border-gray-300! text-gray-700! hover:bg-gray-50! rounded-xl! py-3.5! font-bold! text-base! capitalize!"
+                className="mt-3! border-gray-300! text-gray-700! hover:bg-gray-50! rounded-xl! py-3.5! font-bold! text-base! capitalize!"
                 startIcon={<FaTimes />}
               >
                 Cancel
