@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
-import { RiMenuUnfold4Fill } from "react-icons/ri"
-import { RiMenuFold4Fill } from "react-icons/ri"
+import { Link, useNavigate } from 'react-router-dom'
+import { RiMenuUnfold4Fill, RiMenuFold4Fill } from "react-icons/ri"
 import { FaRegBell } from "react-icons/fa"
 import { IoLogOutOutline, IoSettingsOutline, IoPersonOutline } from "react-icons/io5"
 import { HiChevronDown } from "react-icons/hi"
+import { useAuthContext } from '../../contexts/AuthContext'
+import { toast } from 'react-toastify'
 
 const Header = ({ toggleSidebar, sidebarOpen }) => {
+  const navigate = useNavigate()
+  const { user, logout, authLoading } = useAuthContext()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const userMenuRef = useRef(null)
@@ -27,6 +30,18 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const handleLogout = async () => {
+    try {
+      setShowUserMenu(false)
+      await logout()
+      toast.success('Logged out successfully!')
+      navigate('/sign-in', { replace: true })
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast.error('Logout failed. Please try again.')
+    }
+  }
+
   const notifications = [
     { id: 1, title: 'New Order', message: 'Order #12345 placed', time: '5 min ago', unread: true },
     { id: 2, title: 'Product Updated', message: 'Product inventory low', time: '1 hour ago', unread: true },
@@ -34,6 +49,16 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
   ]
 
   const unreadCount = notifications.filter(n => n.unread).length
+
+  // Get user initials
+  const getUserInitials = () => {
+    if (!user?.name) return 'AD'
+    const names = user.name.split(' ')
+    if (names.length >= 2) {
+      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
+    }
+    return user.name.substring(0, 2).toUpperCase()
+  }
 
   return (
     <header 
@@ -138,11 +163,15 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
                 className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-100 transition-all duration-200"
               >
                 <div className="w-9 h-9 bg-linear-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-md">
-                  <span className="text-white text-sm font-semibold">AD</span>
+                  <span className="text-white text-sm font-semibold">{getUserInitials()}</span>
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-semibold text-gray-900 leading-tight">Admin</p>
-                  <p className="text-xs text-gray-500">Administrator</p>
+                  <p className="text-sm font-semibold text-gray-900 leading-tight">
+                    {user?.name || 'Admin'}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {user?.role || 'Administrator'}
+                  </p>
                 </div>
                 <HiChevronDown 
                   className={`w-4 h-4 text-gray-600 transition-transform duration-200 ${
@@ -155,8 +184,8 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 animate-slideDown">
                   <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900">Admin</p>
-                    <p className="text-xs text-gray-500">admin@example.com</p>
+                    <p className="text-sm font-semibold text-gray-900">{user?.name || 'Admin'}</p>
+                    <p className="text-xs text-gray-500">{user?.email || 'admin@example.com'}</p>
                   </div>
 
                   <div className="py-2">
@@ -179,20 +208,16 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
                     </Link>
                   </div>
 
-                  <Link to="/sign-in">
                   <div className="border-t border-gray-100 pt-2">
                     <button
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      onClick={() => {
-                        setShowUserMenu(false)
-                        // Add logout logic
-                      }}
+                      onClick={handleLogout}
+                      disabled={authLoading}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <IoLogOutOutline className="w-5 h-5" />
-                      <span>Logout</span>
+                      <span>{authLoading ? 'Logging out...' : 'Logout'}</span>
                     </button>
                   </div>
-                  </Link>
                 </div>
               )}
             </div>

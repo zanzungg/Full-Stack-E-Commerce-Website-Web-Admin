@@ -82,3 +82,8 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.Toastify__toast {
+  font-family: inherit;
+  border-radius: 8px;
+}

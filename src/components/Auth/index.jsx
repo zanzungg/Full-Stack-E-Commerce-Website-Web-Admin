@@ -196,22 +196,24 @@ const Divider = ({ text = 'Or continue with' }) => {
 }
 
 // ==================== SOCIAL ====================
-const Social = ({ providers = ['google', 'github'], onProviderClick }) => {
+const Social = ({ providers = ['google'], onProviderClick }) => {
   const providerConfig = {
     google: {
       name: 'Google',
       icon: 'https://www.google.com/favicon.ico'
     },
-    github: {
-      name: 'GitHub',
-      icon: 'https://github.githubassets.com/favicons/favicon.svg'
-    }
   }
 
+  const validProviders = providers.filter(p => providerConfig[p])
+
+  // Nếu không có provider hợp lệ nào → không render gì
+  if (validProviders.length === 0) return null
+
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {providers.map((provider) => {
+    <div className={`grid gap-4 ${validProviders.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+      {validProviders.map((provider) => {
         const config = providerConfig[provider]
+
         return (
           <button
             key={provider}

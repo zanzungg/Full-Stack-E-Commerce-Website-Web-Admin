@@ -1,16 +1,34 @@
 import React, { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { RxDashboard } from "react-icons/rx"
 import { MdOutlineInventory2, MdOutlineShoppingCart, MdOutlinePeopleAlt, MdOutlineCategory } from 'react-icons/md'
 import { FaRegImages } from "react-icons/fa"
 import { IoLogOutOutline, IoClose } from "react-icons/io5"
 import { FaAngleDown, FaAngleUp } from "react-icons/fa6"
+import { useAuthContext } from '../../contexts/AuthContext'
+import { toast } from 'react-toastify'
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { logout, authLoading } = useAuthContext()
   const [homeSlidesOpen, setHomeSlidesOpen] = useState(false)
   const [productsOpen, setProductsOpen] = useState(false)
   const [categoriesOpen, setCategoriesOpen] = useState(false)
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      toast.success('Logged out successfully!')
+      navigate('/sign-in', { replace: true })
+      if (window.innerWidth < 1024) {
+        onClose?.()
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast.error('Logout failed. Please try again.')
+    }
+  }
 
   const menuItems = [
     { 
@@ -66,11 +84,6 @@ const Sidebar = ({ isOpen, onClose }) => {
       label: 'Orders', 
       icon: <MdOutlineShoppingCart className="w-5 h-5" /> 
     },
-    { 
-      path: '/logout', 
-      label: 'Logout', 
-      icon: <IoLogOutOutline className="w-5 h-5" /> 
-    },
   ]
 
   const isActive = (path) => {
@@ -120,7 +133,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="p-4 space-y-1 overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 64px)' }}>
+      <nav className="p-4 space-y-1 overflow-y-auto overflow-x-hidden" style={{ height: 'calc(100vh - 128px)' }}>
         {menuItems.map((item) => (
           <div key={item.path}>
             {/* Main Menu Item */}
@@ -181,6 +194,18 @@ const Sidebar = ({ isOpen, onClose }) => {
           </div>
         ))}
       </nav>
+
+      {/* Logout Button - Fixed at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
+        <button
+          onClick={handleLogout}
+          disabled={authLoading}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <IoLogOutOutline className="w-5 h-5 shrink-0" />
+          <span className="text-sm">{authLoading ? 'Logging out...' : 'Logout'}</span>
+        </button>
+      </div>
     </aside>
   )
 }
