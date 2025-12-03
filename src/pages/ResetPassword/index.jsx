@@ -1,52 +1,138 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Auth } from '../../components/Auth'
-import { useAuthForm } from '../../hooks/useAuthForm'
+import { useAuthContext } from '../../contexts/AuthContext'
+import { STORAGE_KEYS } from '../../config/constants'
 import { FaKey } from 'react-icons/fa'
 import { MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md'
+import { toast } from 'react-toastify'
 
 const ResetPassword = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { resetPassword, authLoading, isAuthenticated } = useAuthContext()
+  
   const email = location.state?.email || ''
   const verified = location.state?.verified || false
+  const resetToken = location.state?.resetToken || localStorage.getItem(STORAGE_KEYS.RESET_TOKEN)
   
-  const [success, setSuccess] = React.useState(false)
-  
-  const { 
-    formData, 
-    loading, 
-    errors,
-    showPassword,
-    showConfirmPassword,
-    setShowPassword,
-    setShowConfirmPassword,
-    handleChange,
-    setLoading,
-    validate
-  } = useAuthForm({ confirmPassword: '' })
+  const [formData, setFormData] = useState({
+    password: '',
+    confirmPassword: ''
+  })
+  const [errors, setErrors] = useState({})
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [success, setSuccess] = useState(false)
+
+  // Redirect nếu đã đăng nhập
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true })
+    }
+  }, [isAuthenticated, navigate])
 
   useEffect(() => {
-    if (!email || !verified) {
-      navigate('/forgot-password')
+    if (success) return
+    
+    if (!email || !verified || !resetToken) {
+      toast.error('Invalid reset request. Please try again.')
+      navigate('/forgot-password', { replace: true })
     }
-  }, [email, verified, navigate])
+  }, [email, verified, resetToken, navigate])
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    // Clear error khi user nhập
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }))
+    }
+  }
+
+  const validateForm = () => {
+    const newErrors = {}
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required'
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      newErrors.password = 'Password must contain uppercase, lowercase and number'
+    }
+    
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password'
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!validate(['password', 'confirmPassword'])) return
+    if (!validateForm()) return
 
-    setLoading(true)
+    try {
+      await resetPassword(resetToken, formData.password)
 
-    setTimeout(() => {
-      setLoading(false)
+      toast.success('Password reset successfully!', {
+        position: 'top-right',
+        autoClose: 2000,
+      })
+
       setSuccess(true)
 
       setTimeout(() => {
-        navigate('/sign-in')
+        navigate('/sign-in', {
+          state: {
+            email,
+            passwordReset: true,
+            message: 'Password reset successful! Please sign in with your new password.'
+          }
+        })
       }, 3000)
-    }, 2000)
+
+    } catch (error) {
+      console.error('Reset password error:', error)
+      
+      let errorMessage = 'Failed to reset password. Please try again.'
+      
+      if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || 'Invalid reset token'
+      } else if (error.response?.status === 410) {
+        errorMessage = 'Reset token has expired. Please request a new password reset.'
+        setTimeout(() => {
+          navigate('/forgot-password')
+        }, 3000)
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      }
+      
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 4000,
+      })
+      
+      if (error.response?.data?.errors) {
+        setErrors(error.response.data.errors)
+      }
+    }
+  }
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSubmit(e)
+    }
   }
 
   if (success) {
@@ -66,7 +152,7 @@ const ResetPassword = () => {
               buttonText="Go to Sign In"
               buttonHref="/sign-in"
               LinkComponent={Link}
-              buttongradient="from-blue-600 to-purple-600"
+              buttongradient="from-purple-600 to-pink-600"
             />
           </div>
         </Auth.Card>
@@ -88,7 +174,7 @@ const ResetPassword = () => {
             <p className="text-gray-600 text-base mb-2">
               Create a new password for
             </p>
-            <p className="text-blue-600 font-semibold">{email}</p>
+            <p className="text-purple-600 font-semibold">{email}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -99,18 +185,21 @@ const ResetPassword = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={handleChange}
+                onKeyPress={handleKeyPress}
                 placeholder="Enter new password"
                 icon={MdLock}
                 endIcon={showPassword ? <MdVisibilityOff className="w-5 h-5" /> : <MdVisibility className="w-5 h-5" />}
                 onEndIconClick={() => setShowPassword(!showPassword)}
                 error={errors.password}
-                disabled={loading}
+                disabled={authLoading}
+                autoComplete="new-password"
+                required
               />
               
               <Auth.PasswordStrength password={formData.password} />
               
               <p className="mt-2 text-xs text-gray-500">
-                Must be at least 8 characters with uppercase, lowercase, numbers & symbols
+                Must be at least 6 characters with uppercase, lowercase and numbers
               </p>
             </div>
 
@@ -121,12 +210,15 @@ const ResetPassword = () => {
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={formData.confirmPassword}
                 onChange={handleChange}
+                onKeyPress={handleKeyPress}
                 placeholder="Confirm new password"
                 icon={MdLock}
                 endIcon={showConfirmPassword ? <MdVisibilityOff className="w-5 h-5" /> : <MdVisibility className="w-5 h-5" />}
                 onEndIconClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 error={errors.confirmPassword}
-                disabled={loading}
+                disabled={authLoading}
+                autoComplete="new-password"
+                required
               />
               
               <Auth.PasswordMatch
@@ -137,10 +229,10 @@ const ResetPassword = () => {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={authLoading}
               className="w-full bg-linear-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (
+              {authLoading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>Resetting Password...</span>

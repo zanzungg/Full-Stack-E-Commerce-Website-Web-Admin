@@ -31,6 +31,7 @@ import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
 import VerifyEmail from './pages/VerifyEmail'
 import ResetPassword from './pages/ResetPassword'
+import VerifyResetCode from './pages/VerifyResetCode'
 
 const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
     element: <Signup />
   },
   {
+    path: "/verify-email",
+    element: <VerifyEmail />
+  },
+  {
     path: "/logout",
     element: <Signin />
   },
@@ -50,8 +55,8 @@ const router = createBrowserRouter([
     element: <ForgotPassword />
   },
   {
-    path: "/verify-email",
-    element: <VerifyEmail />
+    path: "/verify-reset-code",
+    element: <VerifyResetCode />
   },
   {
     path: "/reset-password",

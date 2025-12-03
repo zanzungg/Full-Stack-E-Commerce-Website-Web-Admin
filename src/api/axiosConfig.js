@@ -38,6 +38,7 @@ axiosInstance.interceptors.response.use(
                                   originalRequest.url?.includes(API_ENDPOINTS.REGISTER) ||
                                   originalRequest.url?.includes(API_ENDPOINTS.REFRESH_TOKEN) ||
                                   originalRequest.url?.includes(API_ENDPOINTS.VERIFY_EMAIL) ||
+                                  originalRequest.url?.includes(API_ENDPOINTS.RESEND_OTP) ||
                                   originalRequest.url?.includes(API_ENDPOINTS.FORGOT_PASSWORD) ||
                                   originalRequest.url?.includes(API_ENDPOINTS.VERIFY_RESET_CODE) ||
                                   originalRequest.url?.includes(API_ENDPOINTS.RESET_PASSWORD) ||
