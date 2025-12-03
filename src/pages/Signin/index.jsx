@@ -5,6 +5,7 @@ import { useAuthContext } from '../../contexts/AuthContext'
 import { MdAdminPanelSettings } from 'react-icons/md'
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { toast } from 'react-toastify'
+import { authService } from '../../api/services/authService'
 
 const Signin = () => {
   const navigate = useNavigate()
@@ -12,7 +13,7 @@ const Signin = () => {
   const { login, authLoading, isAuthenticated } = useAuthContext()
   
   const [formData, setFormData] = useState({
-    email: '',
+    email: location.state?.email || '',
     password: ''
   })
   const [errors, setErrors] = useState({})
@@ -87,7 +88,40 @@ const Signin = () => {
       if (error.response?.status === 401) {
         errorMessage = 'Invalid email or password'
       } else if (error.response?.status === 403) {
+        // Email not verified
+        if (error.response.data?.message?.includes('Email is not verified')) {
+          errorMessage = 'Please verify your email before signing in'
+
+          toast.error(errorMessage, {
+            position: 'top-right',
+            autoClose: 4000,
+          })
+
+          // GỬI OTP MỚI trước khi redirect
+          try {
+            await authService.resendVerificationOTP(formData.email)
+            toast.success('Verification code sent to your email!', {
+              position: 'top-right',
+              autoClose: 2000,
+            })
+          } catch (resendError) {
+            console.error('Failed to resend OTP:', resendError)
+          }
+
+          // Redirect to verify email page
+          setTimeout(() => {
+            navigate('/verify-email', { 
+              state: { 
+                email: formData.email,
+                fromLogin: true 
+              },
+              replace: true
+            })
+          }, 1500)
+          return
+        }
         errorMessage = 'Your account has been disabled. Please contact support.'
+
       } else if (error.response?.status === 404) {
         errorMessage = 'Account not found. Please sign up.'
       } else if (error.response?.data?.message) {

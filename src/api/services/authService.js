@@ -8,6 +8,7 @@ export const authService = {
     },
 
     register: async (userData) => {
+        // userData = { name, email, phone, password }
         const response = await axiosInstance.post(API_ENDPOINTS.REGISTER, userData);
         return response;
     },
@@ -19,6 +20,7 @@ export const authService = {
     },
 
     verifyEmail: async (otpData) => {
+        // otpData = { email, otp }
         const response = await axiosInstance.post(API_ENDPOINTS.VERIFY_EMAIL, otpData);
         return response;
     },
@@ -37,6 +39,12 @@ export const authService = {
     resetPassword: async (resetData) => {
         // resetData = { resetToken, newPassword }
         const response = await axiosInstance.post(API_ENDPOINTS.RESET_PASSWORD, resetData);
+        return response;
+    },
+
+    // Resend OTP cho email verification
+    resendVerificationOTP: async (email) => {
+        const response = await axiosInstance.post(API_ENDPOINTS.RESEND_OTP, { email });
         return response;
     },
 };

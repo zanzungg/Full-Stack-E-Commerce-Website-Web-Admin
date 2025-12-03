@@ -1,31 +1,46 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Auth } from '../../components/Auth'
+import { useAuthContext } from '../../contexts/AuthContext'
+import { authService } from '../../api/services/authService'
 import { useOTP } from '../../hooks/useOTP'
 import { useCountdown } from '../../hooks/useCountdown'
 import { FaShieldAlt } from 'react-icons/fa'
 import { MdArrowBack, MdVerified } from 'react-icons/md'
+import { toast } from 'react-toastify'
 
 const VerifyEmail = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const email = location.state?.email || ''
+  const { isAuthenticated, user } = useAuthContext() // Thêm user
+  const email = location.state?.email || user?.email || '' // Lấy từ state hoặc user
+  const fromRegistration = location.state?.fromRegistration || false
+  const fromLogin = location.state?.fromLogin || false
   
   const { otp, setOtp, isComplete, value: otpValue, reset: resetOtp } = useOTP()
   const { countdown, start, reset: resetCountdown } = useCountdown(600)
-  const { countdown: resendCountdown, start: startResend } = useCountdown(60)
+  const { countdown: resendCountdown, start: startResend, reset: resetResendCountdown } = useCountdown(60)
   
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  // CHỈ redirect nếu đã đăng nhập VÀ email đã verify
+  useEffect(() => {
+    if (isAuthenticated && user?.verify_email) {
+      navigate('/', { replace: true })
+    }
+  }, [isAuthenticated, user, navigate])
 
   useEffect(() => {
     if (!email) {
-      navigate('/forgot-password')
+      toast.error('Email is required for verification')
+      navigate('/sign-up', { replace: true })
       return
     }
     // Start countdown when component mounts
-    start(600)
-  }, [email, navigate])
+    start(600) // 10 minutes - Main countdown
+    startResend(60) // 1 minute - Resend cooldown
+  }, [email, navigate, start, startResend])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -43,28 +58,103 @@ const VerifyEmail = () => {
 
     setLoading(true)
 
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      await authService.verifyEmail({
+        email,
+        otp: otpValue
+      })
+
+      toast.success('Email verified successfully!', {
+        position: 'top-right',
+        autoClose: 2000,
+      })
+
+      // Nếu từ login, yêu cầu đăng nhập lại
+      // Nếu từ registration, redirect đến sign-in
+      setTimeout(() => {
+        if (fromLogin) {
+          navigate('/sign-in', { 
+            state: { 
+              email,
+              verified: true,
+              message: 'Email verified! Please sign in again to continue.' 
+            },
+            replace: true 
+          })
+        } else {
+          navigate('/sign-in', { 
+            state: { 
+              email,
+              verified: true,
+              message: 'Email verified! Please sign in to continue.' 
+            },
+            replace: true 
+          })
+        }
+      }, 1500)
+
+    } catch (error) {
+      console.error('Verify email error:', error)
       
-      if (otpValue === '123456') {
-        navigate('/reset-password', { state: { email, verified: true } })
-      } else {
-        setError('Invalid verification code. Please try again.')
-        resetOtp()
+      let errorMessage = 'Verification failed. Please try again.'
+      
+      if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || 'Invalid verification code'
+      } else if (error.response?.status === 404) {
+        errorMessage = 'User not found. Please register again.'
+      } else if (error.response?.status === 410) {
+        errorMessage = 'Verification code has expired. Please request a new one.'
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
       }
-    }, 2000)
+      
+      setError(errorMessage)
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 4000,
+      })
+      resetOtp()
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (resendCountdown > 0) return
 
     setError('')
-    resetOtp()
-    start(600) // Reset main countdown
-    startResend(60) // Start resend cooldown
-    
-    // TODO: Call API to resend code
-    console.log('Resending code to:', email)
+    setLoading(true)
+
+    try {
+      await authService.resendVerificationOTP(email)
+      
+      toast.success('Verification code sent to your email!', {
+        position: 'top-right',
+        autoClose: 3000,
+      })
+      
+      resetOtp()
+      start(600) // Reset main countdown to 10 minutes
+      startResend(60) // Start resend cooldown to 1 minute
+      
+    } catch (error) {
+      console.error('Resend OTP error:', error)
+      
+      let errorMessage = 'Failed to resend code. Please try again.'
+      
+      if (error.response?.status === 429) {
+        errorMessage = 'Too many requests. Please wait a moment.'
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      }
+      
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 4000,
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -125,10 +215,11 @@ const VerifyEmail = () => {
             countdown={resendCountdown}
             onResend={handleResend}
             text="Resend Code"
+            disabled={loading}
           />
 
           <div className="mt-6 text-center">
-            <Link to="/forgot-password">
+            <Link to={fromRegistration ? "/sign-up" : "/sign-in"}>
               <button className="text-blue-600 hover:bg-blue-50 rounded-xl px-6 py-2 font-semibold transition-colors inline-flex items-center gap-2">
                 <MdArrowBack />
                 Back
@@ -147,7 +238,7 @@ const VerifyEmail = () => {
               "Check your spam/junk folder",
               "Make sure you entered the correct email",
               "The code is valid for 10 minutes",
-              "For testing, use code: 123456"
+              "Contact support if you don't receive the code"
             ]}
           />
         </div>

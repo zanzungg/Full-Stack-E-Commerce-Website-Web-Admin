@@ -1,34 +1,46 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 export const useCountdown = (initialTime = 60) => {
   const [countdown, setCountdown] = useState(initialTime)
   const [isActive, setIsActive] = useState(false)
+  const timerRef = useRef(null)
 
   useEffect(() => {
-    let timer
     if (isActive && countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+      timerRef.current = setTimeout(() => {
+        setCountdown(prev => prev - 1)
+      }, 1000)
     } else if (countdown === 0) {
       setIsActive(false)
     }
-    return () => clearTimeout(timer)
+    
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
   }, [countdown, isActive])
 
-  const start = (time = initialTime) => {
+  // Memoize start function
+  const start = useCallback((time = initialTime) => {
     setCountdown(time)
     setIsActive(true)
-  }
+  }, [initialTime])
 
-  const reset = () => {
+  // Memoize reset function
+  const reset = useCallback(() => {
     setCountdown(initialTime)
     setIsActive(false)
-  }
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+    }
+  }, [initialTime])
 
-  const formatTime = (seconds) => {
+  const formatTime = useCallback((seconds) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
+  }, [])
 
   return {
     countdown,
